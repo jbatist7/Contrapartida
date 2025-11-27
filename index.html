@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calcular Contrapartida em Projetos</title>
+    <style>
+        /* 📱 Estilos Gerais e Mobile First */
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f2f5;
+            margin: 0;
+            padding: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 450px;
+            background-color: #ffffff;
+            padding: 15px;
+            border-radius: 12px;
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            color: #176B87;
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 1.6em;
+        }
+        
+        /* Estilos de Seção para Organização Visual */
+        .secao {
+            background-color: #f7f9fc;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            border: 1px solid #e0e6ed;
+        }
+        
+        .secao h2 {
+            color: #007bff;
+            font-size: 1.1em;
+            margin-top: 0;
+            padding-bottom: 5px;
+            border-bottom: 2px solid #e0e6ed;
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 4px;
+            font-weight: bold;
+            color: #333;
+            font-size: 0.9em;
+        }
+        
+        /* Garante espaçamento para instruções */
+        .instrucao {
+            font-size: 0.8em; 
+            color: #555; 
+            margin-top: 5px; 
+            margin-bottom: 10px;
+        }
+
+        /* Estilo base para inputs de valor (Não percentual) */
+        input[type="number"] {
+            width: calc(100% - 20px);
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #b3cde0;
+            border-radius: 4px;
+            box-sizing: border-box;
+            font-size: 1em;
+        }
+        
+        /* ---------------------------------------------------- */
+        /* Estilos para o Sufixo de Percentual (%) Visual */
+        /* ---------------------------------------------------- */
+        
+        .input-group {
+            position: relative;
+            margin-bottom: 15px; 
+        }
+        
+        /* Estilo para os inputs DENTRO dos grupos (os de percentual) */
+        .input-group input {
+            width: 100%; 
+            padding: 10px; 
+            padding-right: 30px; 
+            margin-bottom: 0;
+            border: 1px solid #b3cde0; 
+            border-radius: 4px;
+            box-sizing: border-box;
+            font-size: 1em;
+        }
+
+        /* O sufixo '%' propriamente dito */
+        .input-group::after {
+            content: '%';
+            position: absolute;
+            top: 50%;
+            right: 15px; 
+            transform: translateY(-50%);
+            font-size: 1em;
+            color: #555; 
+            pointer-events: none;
+        }
+        /* ---------------------------------------------------- */
+
+        /* 📊 Estilo para os campos de resultado (automático) */
+        .resultado {
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 4px;
+            font-weight: bold;
+            color: #176B87;
+            background-color: #e6f0ff;
+            border: 1px solid #a8cbf4;
+            font-size: 1.1em;
+        }
+
+        /* Destaque para o Valor Total (Âncora e Final) */
+        #saidaTotalFinal {
+            background-color: #ffe0b2;
+            color: #a0522d;
+            border: 2px solid #ffcc80;
+            text-align: center;
+            font-size: 1.2em;
+        }
+        
+        /* ⚠️ Estilo para a mensagem de erro */
+        #mensagemErro {
+            color: #dc3545; 
+            font-weight: bold;
+            margin-top: 5px; 
+            margin-bottom: 15px;
+            display: none;
+            background-color: #f8d7da;
+            padding: 8px;
+            border-radius: 4px;
+        }
+        
+        /* 📱 Estilo para o botão de WhatsApp (Desativado neste formato, pois o foco é só o cálculo) */
+        #btnWhatsapp {
+            display: none; /* Mantendo desativado, se for necessário, podemos reativar */
+        }
+
+        /* 🖋️ Créditos do Autor (Discreto) */
+        .creditos {
+            text-align: center;
+            margin-top: 25px;
+            font-size: 0.75em; 
+            color: #999;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Calcular Contrapartida em Projetos</h1>
+    
+    <div class="secao">
+        <h2>1. Definição dos Valores Base</h2>
+
+        <label for="valorSolicitado">Valor Solicitado:</label>
+        <p class="instrucao">(Não digite ponto para separar os números. Use vírgula para centavos)</p>
+        <input type="number" id="valorSolicitado" placeholder="Ex: 900.00" value="900.00" oninput="calcular(true)" step="0.01">
+
+        <label for="percentualContrapartida">Percentual da Contrapartida:</label>
+        <p class="instrucao">(O edital prevê um percentual mínimo, porém, a depender da conveniência esse percentual pode ser maior)</p>
+        
+        <div class="input-group">
+            <input type="number" id="percentualContrapartida" placeholder="Ex: 10.00" value="10.00" oninput="calcular(false)" step="0.01">
+        </div>
+        
+        <div id="mensagemErro">⚠️ O percentual de Contrapartida não pode ser igual ou superior a 100%, pois o Valor Solicitado seria zero.</div>
+    </div>
+    
+    <div class="secao">
+        <h2>2. Resultado Automático</h2>
+        
+        <label>Valor Solicitado:</label>
+        <div id="saidaSolicitadoCompleta" class="resultado">Aguardando...</div>
+
+        <label>Valor da Contrapartida:</label>
+        <div id="saidaContrapartidaCompleta" class="resultado">Aguardando...</div>
+
+        <label>Valor Total do Projeto:</label>
+        <div id="saidaTotalFinal" class="resultado">Aguardando...</div>
+    </div>
+    
+    <div class="creditos">
+        Calculadora criada por João Batista - jbatist7@gmail.com
+    </div>
+
+</div>
+
+<script>
+    function formatarMoeda(valor) {
+        if (isNaN(valor) || !isFinite(valor)) return 'Inválido';
+        // Usa a formatação brasileira (vírgula para decimal), sem o símbolo R$ no retorno.
+        return valor.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+    
+    function formatarPercentual(valor) {
+        if (isNaN(valor) || !isFinite(valor)) return 'Inválido';
+        return valor.toFixed(2);
+    }
+
+    /**
+     * isValorSolicitadoChanged: true se o Valor Solicitado (R$) foi alterado, o que reseta a Contrapartida se esta estiver vazia.
+     */
+    function calcular(isValorSolicitadoChanged) {
+        const valorSolicitadoInput = document.getElementById('valorSolicitado');
+        const percentualContrapartidaInput = document.getElementById('percentualContrapartida');
+        const mensagemErro = document.getElementById('mensagemErro');
+
+        let valorSolicitado = parseFloat(valorSolicitadoInput.value);
+        let percentualContrapartida = parseFloat(percentualContrapartidaInput.value);
+        
+        // --- 1. Lógica de Reset e Preenchimento Inicial ---
+        
+        // Se o Valor Solicitado (R$) mudou e o Percentual estava vazio, sugere 10.00%
+        if (isValorSolicitadoChanged && isNaN(percentualContrapartida)) {
+            percentualContrapartida = 10.00;
+            percentualContrapartidaInput.value = percentualContrapartida.toFixed(2);
+        }
+
+        // --- 2. Lógica de Edição (Permitir Apagar sem Erro) ---
+
+        // Verifica se as entradas são válidas para iniciar o cálculo
+        if (isNaN(valorSolicitado) || valorSolicitado <= 0 || isNaN(percentualContrapartida) || percentualContrapartidaInput.value.trim() === '') {
+            mensagemErro.style.display = 'none';
+            document.getElementById('saidaTotalFinal').textContent = 'R$ 0,00';
+            document.getElementById('saidaSolicitadoCompleta').textContent = 'Aguardando digitação...';
+            document.getElementById('saidaContrapartidaCompleta').textContent = 'Aguardando digitação...';
+            return; 
+        }
+
+        // --- 3. Validação de Erro (Percentual Inválido) ---
+        
+        // Contrapartida não pode ser 100% ou mais
+        if (percentualContrapartida >= 100) {
+            mensagemErro.style.display = 'block'; 
+            document.getElementById('saidaTotalFinal').textContent = 'ERRO - Ajuste %';
+            document.getElementById('saidaSolicitadoCompleta').textContent = 'ERRO - Ajuste %';
+            document.getElementById('saidaContrapartidaCompleta').textContent = 'ERRO - Ajuste %';
+            return;
+        } else {
+            mensagemErro.style.display = 'none';
+        }
+
+        // --- 4. Cálculo dos Valores Finais ---
+        
+        // A. Calcular Percentual Solicitado (Financiamento)
+        const percentualSolicitado = 100 - percentualContrapartida;
+        const percentualSolicitadoDecimal = percentualSolicitado / 100;
+
+        // B. Calcular Valor Total (V = V_solicitado / P_solicitado)
+        const valorTotalProjeto = valorSolicitado / percentualSolicitadoDecimal;
+        
+        // C. Calcular Valor da Contrapartida
+        const valorContrapartida = valorTotalProjeto - valorSolicitado;
+        
+        // --- 5. Exibição ---
+        
+        // Exibição do Solicitado
+        const saidaSolicitado = 'R$ ' + formatarMoeda(valorSolicitado) + ' - ' + formatarPercentual(percentualSolicitado) + '%';
+        document.getElementById('saidaSolicitadoCompleta').textContent = saidaSolicitado;
+
+        // Exibição da Contrapartida
+        const saidaContrapartida = 'R$ ' + formatarMoeda(valorContrapartida) + ' - ' + formatarPercentual(percentualContrapartida) + '%';
+        document.getElementById('saidaContrapartidaCompleta').textContent = saidaContrapartida;
+
+        // Exibição do Total (Destaque)
+        document.getElementById('saidaTotalFinal').textContent = 'R$ ' + formatarMoeda(valorTotalProjeto);
+    }
+
+    // Executa o cálculo inicial
+    window.onload = function() {
+        calcular(true); 
+    };
+</script>
+
+</body>
+</html>
