@@ -145,9 +145,22 @@
             border-radius: 4px;
         }
         
-        /* 📱 Estilo para o botão de WhatsApp (Desativado neste formato, pois o foco é só o cálculo) */
+        /* 📱 Estilo para o botão de WhatsApp */
         #btnWhatsapp {
-            display: none; /* Mantendo desativado, se for necessário, podemos reativar */
+            background-color: #25D366;
+            color: white;
+            padding: 14px;
+            border: none;
+            border-radius: 25px;
+            width: 100%;
+            font-size: 1.1em;
+            cursor: pointer;
+            margin-top: 15px;
+            transition: background-color 0.3s;
+        }
+
+        #btnWhatsapp:hover {
+            background-color: #1DA851;
         }
 
         /* 🖋️ Créditos do Autor (Discreto) */
@@ -194,6 +207,10 @@
         <div id="saidaTotalFinal" class="resultado">Aguardando...</div>
     </div>
     
+    <button id="btnWhatsapp" onclick="enviarWhatsapp()" disabled>
+        Enviar Resultados para WhatsApp
+    </button>
+    
     <div class="creditos">
         Calculadora criada por João Batista - jbatist7@gmail.com
     </div>
@@ -212,20 +229,17 @@
         return valor.toFixed(2);
     }
 
-    /**
-     * isValorSolicitadoChanged: true se o Valor Solicitado (R$) foi alterado, o que reseta a Contrapartida se esta estiver vazia.
-     */
     function calcular(isValorSolicitadoChanged) {
         const valorSolicitadoInput = document.getElementById('valorSolicitado');
         const percentualContrapartidaInput = document.getElementById('percentualContrapartida');
         const mensagemErro = document.getElementById('mensagemErro');
+        const btnWhatsapp = document.getElementById('btnWhatsapp');
 
         let valorSolicitado = parseFloat(valorSolicitadoInput.value);
         let percentualContrapartida = parseFloat(percentualContrapartidaInput.value);
         
         // --- 1. Lógica de Reset e Preenchimento Inicial ---
         
-        // Se o Valor Solicitado (R$) mudou e o Percentual estava vazio, sugere 10.00%
         if (isValorSolicitadoChanged && isNaN(percentualContrapartida)) {
             percentualContrapartida = 10.00;
             percentualContrapartidaInput.value = percentualContrapartida.toFixed(2);
@@ -233,9 +247,9 @@
 
         // --- 2. Lógica de Edição (Permitir Apagar sem Erro) ---
 
-        // Verifica se as entradas são válidas para iniciar o cálculo
         if (isNaN(valorSolicitado) || valorSolicitado <= 0 || isNaN(percentualContrapartida) || percentualContrapartidaInput.value.trim() === '') {
             mensagemErro.style.display = 'none';
+            btnWhatsapp.disabled = true;
             document.getElementById('saidaTotalFinal').textContent = 'R$ 0,00';
             document.getElementById('saidaSolicitadoCompleta').textContent = 'Aguardando digitação...';
             document.getElementById('saidaContrapartidaCompleta').textContent = 'Aguardando digitação...';
@@ -244,9 +258,9 @@
 
         // --- 3. Validação de Erro (Percentual Inválido) ---
         
-        // Contrapartida não pode ser 100% ou mais
         if (percentualContrapartida >= 100) {
             mensagemErro.style.display = 'block'; 
+            btnWhatsapp.disabled = true;
             document.getElementById('saidaTotalFinal').textContent = 'ERRO - Ajuste %';
             document.getElementById('saidaSolicitadoCompleta').textContent = 'ERRO - Ajuste %';
             document.getElementById('saidaContrapartidaCompleta').textContent = 'ERRO - Ajuste %';
@@ -257,14 +271,12 @@
 
         // --- 4. Cálculo dos Valores Finais ---
         
-        // A. Calcular Percentual Solicitado (Financiamento)
         const percentualSolicitado = 100 - percentualContrapartida;
         const percentualSolicitadoDecimal = percentualSolicitado / 100;
 
-        // B. Calcular Valor Total (V = V_solicitado / P_solicitado)
+        // V_total = V_solicitado / P_solicitado (Raciocínio inverso)
         const valorTotalProjeto = valorSolicitado / percentualSolicitadoDecimal;
         
-        // C. Calcular Valor da Contrapartida
         const valorContrapartida = valorTotalProjeto - valorSolicitado;
         
         // --- 5. Exibição ---
@@ -279,6 +291,28 @@
 
         // Exibição do Total (Destaque)
         document.getElementById('saidaTotalFinal').textContent = 'R$ ' + formatarMoeda(valorTotalProjeto);
+        
+        btnWhatsapp.disabled = false;
+    }
+    
+    function enviarWhatsapp() {
+        // 1. Captura os valores completos já formatados da seção de resultados
+        const solicitadoCompleta = document.getElementById('saidaSolicitadoCompleta').textContent;
+        const contrapartidaCompleta = document.getElementById('saidaContrapartidaCompleta').textContent;
+        const totalFinal = document.getElementById('saidaTotalFinal').textContent;
+
+        // 2. Monta a mensagem final para o WhatsApp, usando %0A para quebra de linha e * para negrito
+        const mensagem = 
+            `*RESULTADO AUTOMÁTICO - Cálculo de Projeto*%0A%0A` +
+            `*Valor Solicitado:*%0A` +
+            `${solicitadoCompleta}%0A%0A` +
+            `*Valor da Contrapartida:*%0A` +
+            `${contrapartidaCompleta}%0A%0A` +
+            `*Valor Total do Projeto:*%0A` +
+            `${totalFinal}`;
+
+        const linkWhatsapp = `https://wa.me/?text=${mensagem}`;
+        window.open(linkWhatsapp, '_blank');
     }
 
     // Executa o cálculo inicial
